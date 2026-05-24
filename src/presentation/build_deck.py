@@ -15,7 +15,6 @@ import json
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
 from ..utils import get_logger, resolve
