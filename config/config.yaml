@@ -1,0 +1,51 @@
+# ML pipeline configuration — Knowledge Tracing on ASSISTments 2009
+# All paths are relative to the project root.
+
+seed: 42
+
+data:
+  # Public ASSISTments 2009 (skill-builder), distilled triplet format.
+  # Mirror used as the canonical source for the Extract step.
+  source_url_train: "https://raw.githubusercontent.com/jennyzhang0215/DKVMN/master/data/assist2009_updated/assist2009_updated_train.csv"
+  source_url_test:  "https://raw.githubusercontent.com/jennyzhang0215/DKVMN/master/data/assist2009_updated/assist2009_updated_test.csv"
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  sample_path: "data/sample/assistments_sample.csv"
+  # Minimum interactions a student must have to be kept.
+  min_seq_len: 3
+  # Cap on sequence length fed to the sequence model (keeps memory bounded).
+  max_seq_len: 200
+  # Hold-out fractions (split is by student to avoid leakage).
+  val_frac: 0.1
+  test_frac: 0.2
+
+models:
+  bkt:
+    em_iters: 30
+  dkt:
+    embed_dim: 64
+    hidden_dim: 64
+    dropout: 0.2
+    epochs: 30          # ↑ from 15 — больше эпох DKT для лучшей сходимости
+    batch_size: 32
+    lr: 0.005
+  dkt_optuna:
+    n_trials: 25        # ↑ from 12 — шире поиск архитектуры
+    epochs_per_trial: 8 # ↑ from 6 — точнее оценка каждой конфигурации
+  automl_flaml:
+    time_budget_s: 600  # ↑ from 60 — 10 мин на AutoML, обычно ловит ещё пару процентов AUC
+    metric: "roc_auc"
+    estimator_list: ["lgbm", "xgboost", "rf", "extra_tree"]
+
+monitoring:
+  # PSI thresholds: <0.1 stable, 0.1-0.25 moderate drift, >0.25 significant drift.
+  psi_warn: 0.10
+  psi_alert: 0.25
+
+mlflow:
+  experiment_name: "knowledge-tracing-automl"
+  tracking_uri: "file:./mlruns"
+
+output:
+  figures_dir: "reports/figures"
+  metrics_path: "reports/metrics.json"

@@ -1,0 +1,19 @@
+# Two services:
+#   pipeline — runs the ML pipeline, writing reports/ and mlruns/ to the host
+#   mlflow   — serves the MLflow UI over the shared mlruns/ tracking store
+services:
+  pipeline:
+    build: .
+    image: kt-pipeline:latest
+    command: ["--data-source", "sample"]
+    volumes:
+      - ./reports:/app/reports
+      - ./mlruns:/app/mlruns
+
+  mlflow:
+    image: kt-pipeline:latest
+    entrypoint: ["mlflow", "ui", "--backend-store-uri", "file:/app/mlruns", "--host", "0.0.0.0", "--port", "5000"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/app/mlruns
